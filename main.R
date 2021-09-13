@@ -40,6 +40,9 @@ v <- opq("Milwaukee, WI") %>%
 citylimits <- st_read("../Shapefiles/Milwaukee/City Limits/citylimit.shp") %>%
   st_transform(., crs = st_crs(4326))
 
+hoods <- st_read("../ShapeFiles/Milwaukee/Neighborhoods/neighborhood.shp") %>%
+  st_transform(., crs = st_crs(4326))
+
 west <- st_sfc(st_point(x = c(-88.07097, 42.92082)), crs = st_crs(4326))
 east <- st_sfc(st_point(x = c(-87.86376, 42.92082)), crs = st_crs(4326))
 north <- st_sfc(st_point(x = c(-87.86376, 42.92082)), crs = st_crs(4326))
@@ -56,13 +59,14 @@ all <- list("q" = q,
             "r" = r,
             "v" = v) %>%
   map(., function(x) {
-    st_transform(x$osm_lines, crs = st_crs(citylimits)) %>%
-      st_intersection(., citylimits)
+    st_transform(x$osm_lines, crs = st_crs(hoods)) %>%
+      st_intersection(., hoods %>% filter(NEIGHBORHD == "BAY VIEW"))
   })
 
 size <- 0.01
 
 pdf("test.pdf", width = 7, height = 7, bg = "black")
+
 
 all$q %>%
   ggplot() +
@@ -74,7 +78,13 @@ all$q %>%
   geom_sf(data = all$r, size = size, color = "white") +
   geom_sf(data = all$v, size = size, color = "white") +
   theme_void() +
-  theme(panel.background = element_rect(fill = "black"))
+  theme(panel.background = element_rect(fill = "black"),
+        plot.title = element_text(hjust = 0.5, 
+                                  color = "white",
+                                  family = "serif", 
+                                  face = "bold",
+                                  size = 16)) +
+  labs(title = "BAY VIEW")
 
 dev.off()
 
